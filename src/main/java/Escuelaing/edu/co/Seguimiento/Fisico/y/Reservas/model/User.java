@@ -5,7 +5,6 @@ import lombok.Data;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data // Lombok generará automáticamente getters, setters, toString, equals, hashCode
-@Document(collection = "users")
 public class User {
     private String id;
     private String name;
