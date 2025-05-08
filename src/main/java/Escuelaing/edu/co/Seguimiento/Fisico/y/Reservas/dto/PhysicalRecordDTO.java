@@ -10,7 +10,6 @@ import lombok.AllArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PhysicalRecordDTO {
-    private String userName;
     private double weight;
     private Map<String, Double> bodyMeasurements;
     private String physicalGoal;
