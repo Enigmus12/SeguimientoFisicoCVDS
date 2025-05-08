@@ -9,4 +9,5 @@ public interface PhysicalTrackingService {
     PhysicalRecord getPhysicalRecord(String id);
     List<PhysicalRecord> getUserPhysicalHistory(String userId);
     void updatePhysicalRecord(PhysicalRecord record);
+    List<PhysicalRecord> getAllrecords();
 }

@@ -22,6 +22,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/user-service/**").permitAll()
                         .requestMatchers("/tracking-service/**").permitAll()
+                        .requestMatchers("/routine-service/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
