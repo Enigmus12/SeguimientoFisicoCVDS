@@ -92,6 +92,11 @@ public class PhysicalTrackingController {
         }
     }
 
+    // Obtener Todos los Registros
+    @GetMapping("/records")
+    public List<PhysicalRecord> records(){
+        return trackingService.getAllrecords();
+    }
 
     // Obtener el historial de un usuario
     @GetMapping("/records/user/{username}")

@@ -35,4 +35,9 @@ public class PhysicalTrackingServiceImpl implements PhysicalTrackingService {
     public void updatePhysicalRecord(PhysicalRecord record) {
         repository.save(record);
     }
+
+    @Override
+    public List<PhysicalRecord> getAllrecords() {
+        return repository.findAll();
+    }
 }
