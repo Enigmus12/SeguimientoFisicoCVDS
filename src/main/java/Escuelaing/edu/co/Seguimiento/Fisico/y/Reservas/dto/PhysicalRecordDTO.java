@@ -13,4 +13,6 @@ public class PhysicalRecordDTO {
     private double weight;
     private Map<String, Double> bodyMeasurements;
     private String physicalGoal;
+    private String observations;
+    private String activeRoutine;
 }
