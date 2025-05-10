@@ -42,7 +42,7 @@ public class PhysicalTrackingController {
             @RequestHeader("Authorization") String authHeader) {
 
         try {
-            // Extraer el token del header (asumiendo formato "Bearer token")
+            // Extraer el token del header
             String token = authHeader.substring(7);
             String username = jwtUtil.extractUserId(token); // El token contiene el userId (nombre de usuario)
 
@@ -116,14 +116,15 @@ public class PhysicalTrackingController {
         }
     }
 
-    // Actualizar un registro existente
     @PutMapping("/records/{id}")
     public ResponseEntity<Void> updateRecord(@PathVariable String id, @RequestBody PhysicalRecordDTO recordDTO) {
         PhysicalRecord existingRecord = trackingService.getPhysicalRecord(id);
         if (existingRecord != null) {
-            PhysicalRecord updatedRecord = new PhysicalRecord(recordDTO);
-            updatedRecord.setId(id);
-            trackingService.updatePhysicalRecord(updatedRecord);
+            // Solo actualizamos los campos observations y activeRoutine, ignorando el resto
+            existingRecord.setObservations(recordDTO.getObservations());
+            existingRecord.setActiveRoutine(recordDTO.getActiveRoutine());
+
+            trackingService.updatePhysicalRecord(existingRecord);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);

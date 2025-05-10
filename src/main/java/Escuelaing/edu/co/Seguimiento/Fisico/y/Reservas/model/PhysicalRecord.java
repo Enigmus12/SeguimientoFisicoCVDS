@@ -46,5 +46,9 @@ public class PhysicalRecord {
         this.weight = physicalRecordDTO.getWeight();
         this.bodyMeasurements = physicalRecordDTO.getBodyMeasurements();
         this.physicalGoal = physicalRecordDTO.getPhysicalGoal();
+        this.observations = (physicalRecordDTO.getObservations() != null) ?
+                physicalRecordDTO.getObservations() : "";
+        this.activeRoutine = (physicalRecordDTO.getActiveRoutine() != null) ?
+                physicalRecordDTO.getActiveRoutine() : "";
     }
 }
