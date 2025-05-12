@@ -52,7 +52,7 @@ public class UserServiceImpl implements UserService {
             // Verificar la contraseña
             if (user.getPassword().equals(authenticationDTO.getPassword())) {
                 // Generar token JWT
-                String token = jwtUtil.generateToken(user.getUserId());
+                String token = jwtUtil.generateToken(user.getId());
                 return new AuthenticationResponseDTO(true, user, token, "Autenticación exitosa");
             } else {
                 return new AuthenticationResponseDTO(false, null, null, "Contraseña incorrecta");

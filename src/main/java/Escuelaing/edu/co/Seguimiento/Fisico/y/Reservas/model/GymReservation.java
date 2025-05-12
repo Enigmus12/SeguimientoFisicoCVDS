@@ -2,15 +2,24 @@ package Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.model;
 
 import java.util.Date;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.PersistenceCreator;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.MongoId;
 
 @Data // Lombok generará automáticamente getters, setters, toString, equals, hashCode
+@NoArgsConstructor
+@Document(collection = "GymReservations")
 public class GymReservation {
+    @MongoId
     private String id;
+    private String userId;
+    private String scheduleId;
     private String userName;
-    private String identificationNumber;
+    private String identification;
     private String institutionRole;
-    private Date reservationDateTime;
-    private int durationMinutes;
-    private String reservationStatus;  // Confirmed, Canceled, Completed
-    private String assignedTrainer;
+    private String startTime;
+    private String endTime;
+    private String dayOfWeek;
+
 }

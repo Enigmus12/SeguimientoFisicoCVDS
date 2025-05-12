@@ -27,8 +27,15 @@ public class PhysicalTrackingServiceImpl implements PhysicalTrackingService {
     }
 
     @Override
-    public List<PhysicalRecord> getUserPhysicalHistory(String userId) {
-        return repository.findByUserName(userId);
+    public List<PhysicalRecord> getUserPhysicalHistory(String userName) {
+        // Este método ahora debe ser explícito sobre que busca por userName
+        return repository.findByUserName(userName);
+    }
+
+    @Override
+    public List<PhysicalRecord> getUserPhysicalHistoryByUserId(String userId) {
+        // Nuevo método para buscar por userId
+        return repository.findByUserId(userId);
     }
 
     @Override

@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface PhysicalRecordMongoRepository extends MongoRepository<PhysicalRecord, String> {
     List<PhysicalRecord> findByUserName(String userName);
+    List<PhysicalRecord> findByUserId(String userId);
 }

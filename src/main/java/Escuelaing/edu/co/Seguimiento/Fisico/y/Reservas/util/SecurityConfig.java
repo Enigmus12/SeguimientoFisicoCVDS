@@ -23,6 +23,8 @@ public class SecurityConfig {
                         .requestMatchers("/user-service/**").permitAll()
                         .requestMatchers("/tracking-service/**").permitAll()
                         .requestMatchers("/routine-service/**").permitAll()
+                        .requestMatchers("/gym-schedules/**").permitAll()
+                        .requestMatchers("/gym/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
