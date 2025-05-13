@@ -7,7 +7,8 @@ import java.util.List;
 public interface PhysicalTrackingService {
     PhysicalRecord createPhysicalRecord(PhysicalRecord record);
     PhysicalRecord getPhysicalRecord(String id);
-    List<PhysicalRecord> getUserPhysicalHistory(String userId);
+    List<PhysicalRecord> getUserPhysicalHistory(String userName);
+    List<PhysicalRecord> getUserPhysicalHistoryByUserId(String userId);
     void updatePhysicalRecord(PhysicalRecord record);
     List<PhysicalRecord> getAllrecords();
 }
