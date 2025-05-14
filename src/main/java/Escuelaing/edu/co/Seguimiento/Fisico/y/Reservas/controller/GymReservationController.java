@@ -1,5 +1,6 @@
 package Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.controller;
 
+import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.dto.CancellationRequestDTO;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.dto.UserResponseDTO;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.model.GymReservation;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.model.GymSchedules;
@@ -26,6 +27,85 @@ public class GymReservationController {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    // Método actualizado para reservar con scheduleGroupId
+    @PostMapping("/reserve-group/{scheduleGroupId}")
+    public ResponseEntity<?> reserveGymGroup(
+            @PathVariable String scheduleGroupId,
+            @RequestHeader("Authorization") String authHeader) {
+
+        try {
+            // Extraer el token del header
+            String token = authHeader.substring(7);
+            String userId = jwtUtil.extractUserId(token);
+
+            // Llamar al endpoint para obtener los datos del usuario
+            RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", authHeader);
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            ResponseEntity<UserResponseDTO> userResponse = restTemplate.exchange(
+                    "http://localhost:8080/user-service/users/" + userId,
+                    HttpMethod.GET,
+                    entity,
+                    UserResponseDTO.class
+            );
+
+            if (userResponse.getStatusCode() != HttpStatus.OK) {
+                return new ResponseEntity<>("Error al obtener datos del usuario",
+                        userResponse.getStatusCode());
+            }
+
+            UserResponseDTO userData = userResponse.getBody();
+
+            // Obtener los horarios del grupo
+            List<GymSchedules> schedules = gymReservationService.getGymSchedulesByGroupId(scheduleGroupId);
+            if (schedules == null || schedules.isEmpty()) {
+                return new ResponseEntity<>("Grupo de horarios no encontrado",
+                        HttpStatus.NOT_FOUND);
+            }
+
+            // Verificar si hay capacidad disponible para todos los horarios del grupo
+            for (GymSchedules schedule : schedules) {
+                if (!gymReservationService.hasAvailableCapacity(schedule.getId())) {
+                    return new ResponseEntity<>("No hay cupos disponibles para el horario " +
+                            schedule.getDayOfWeek() + " de " + schedule.getStartTime() +
+                            " a " + schedule.getEndTime(),
+                            HttpStatus.BAD_REQUEST);
+                }
+            }
+
+            // Verificar si el usuario ya tiene reservas para alguno de estos horarios
+            for (GymSchedules schedule : schedules) {
+                if (gymReservationService.hasUserReservation(userId, schedule.getId())) {
+                    return new ResponseEntity<>("Ya tienes una reserva para el horario " +
+                            schedule.getDayOfWeek() + " de " + schedule.getStartTime() +
+                            " a " + schedule.getEndTime(),
+                            HttpStatus.CONFLICT);
+                }
+            }
+
+            // Crear las reservas para todos los horarios del grupo
+            List<GymReservation> savedReservations = gymReservationService.createGroupReservation(
+                    userId,
+                    scheduleGroupId,
+                    userData.getUserName(),
+                    userData.getNumberId().toString(),
+                    userData.getRole(),
+                    schedules
+            );
+
+            return new ResponseEntity<>(savedReservations, HttpStatus.CREATED);
+
+        } catch (HttpClientErrorException.NotFound e) {
+            return new ResponseEntity<>("Usuario no encontrado: " + e.getMessage(),
+                    HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error al procesar la solicitud: " + e.getMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 
     @PostMapping("/reserve/{scheduleId}")
     public ResponseEntity<?> reserveGym(
@@ -80,6 +160,7 @@ public class GymReservationController {
             GymReservation reservation = new GymReservation();
             reservation.setUserId(userId);
             reservation.setScheduleId(scheduleId);
+            reservation.setScheduleGroupId(schedule.getScheduleGroupId()); // Guardamos también el scheduleGroupId
             reservation.setUserName(userData.getUserName());
             reservation.setIdentification(userData.getNumberId().toString());
             reservation.setInstitutionRole(userData.getRole());
@@ -116,14 +197,24 @@ public class GymReservationController {
         }
     }
 
-    @DeleteMapping("/cancel-reservation/{reservationId}")
+    // Método actualizado para cancelar reservas con observación obligatoria
+    @PostMapping("/cancel-reservation")
     public ResponseEntity<?> cancelReservation(
-            @PathVariable String reservationId,
+            @RequestBody CancellationRequestDTO cancellationRequest,
             @RequestHeader("Authorization") String authHeader) {
         try {
+            // Validar que se haya proporcionado una razón de cancelación
+            if (cancellationRequest.getCancellationReason() == null ||
+                    cancellationRequest.getCancellationReason().trim().isEmpty()) {
+                return new ResponseEntity<>("Debe proporcionar una razón para la cancelación",
+                        HttpStatus.BAD_REQUEST);
+            }
+
             // Extraer el token del header
             String token = authHeader.substring(7);
             String userId = jwtUtil.extractUserId(token);
+
+            String reservationId = cancellationRequest.getReservationId();
 
             // Verificar si la reserva pertenece al usuario
             boolean isUserReservation = gymReservationService.isUserReservation(userId, reservationId);
@@ -138,8 +229,12 @@ public class GymReservationController {
                         HttpStatus.BAD_REQUEST);
             }
 
-            // Cancelar la reserva
-            boolean canceled = gymReservationService.cancelReservation(reservationId);
+            // Cancelar la reserva con la razón proporcionada
+            boolean canceled = gymReservationService.cancelReservationWithReason(
+                    reservationId,
+                    cancellationRequest.getCancellationReason()
+            );
+
             if (canceled) {
                 return new ResponseEntity<>("Reserva cancelada exitosamente", HttpStatus.OK);
             } else {
