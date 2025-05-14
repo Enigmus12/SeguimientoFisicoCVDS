@@ -9,6 +9,8 @@ import java.util.Optional;
 public interface GymScheduleService {
     List<GymSchedules> findAll();
     Optional<GymSchedules> findById(String id);
-    GymSchedules create(GymSchedulesDTO gymSchedulesDTO);
+    List<GymSchedules> createSemestralSchedules(GymSchedulesDTO gymSchedulesDTO);
     GymSchedules updateCapacity(String id, Integer capacity);
+    List<GymSchedules> updateGroupCapacity(String scheduleGroupId, Integer capacity);
+    List<GymSchedules> updateAllSchedulesCapacity(Integer capacity);
 }

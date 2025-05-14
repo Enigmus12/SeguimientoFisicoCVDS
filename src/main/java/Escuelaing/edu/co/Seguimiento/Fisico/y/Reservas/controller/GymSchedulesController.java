@@ -31,11 +31,14 @@ public class GymSchedulesController {
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    @PostMapping("/create")
-    public ResponseEntity<GymSchedules> createSchedule(
-            @RequestBody GymSchedulesDTO gymSchedulesDTO) {
-        GymSchedules createdSchedule = gymScheduleService.create(gymSchedulesDTO);
-        return new ResponseEntity<>(createdSchedule, HttpStatus.CREATED);
+    @PostMapping("/create-semestral")
+    public ResponseEntity<?> createSemestralSchedules(@RequestBody GymSchedulesDTO gymSchedulesDTO) {
+        try {
+            List<GymSchedules> createdSchedules = gymScheduleService.createSemestralSchedules(gymSchedulesDTO);
+            return new ResponseEntity<>(createdSchedules, HttpStatus.CREATED);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
     }
 
     @PutMapping("/capacity/{id}")
@@ -45,6 +48,29 @@ public class GymSchedulesController {
         GymSchedules updatedSchedule = gymScheduleService.updateCapacity(id, capacity);
         if (updatedSchedule != null) {
             return new ResponseEntity<>(updatedSchedule, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @PutMapping("/group-capacity/{scheduleGroupId}")
+    public ResponseEntity<List<GymSchedules>> updateGroupCapacity(
+            @PathVariable String scheduleGroupId,
+            @RequestParam Integer capacity) {
+        List<GymSchedules> updatedSchedules = gymScheduleService.updateGroupCapacity(scheduleGroupId, capacity);
+        if (!updatedSchedules.isEmpty()) {
+            return new ResponseEntity<>(updatedSchedules, HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @PutMapping("/update-all-capacity")
+    public ResponseEntity<List<GymSchedules>> updateAllSchedulesCapacity(
+            @RequestParam Integer capacity) {
+        List<GymSchedules> updatedSchedules = gymScheduleService.updateAllSchedulesCapacity(capacity);
+        if (!updatedSchedules.isEmpty()) {
+            return new ResponseEntity<>(updatedSchedules, HttpStatus.OK);
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
