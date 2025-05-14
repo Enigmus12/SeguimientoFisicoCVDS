@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -43,9 +44,54 @@ public class GymReservationServiceImpl implements GymReservationService {
     }
 
     @Override
+    public List<GymReservation> createGroupReservation(String userId, String scheduleGroupId,
+                                                       String userName, String identification,
+                                                       String institutionRole, List<GymSchedules> schedules) {
+        List<GymReservation> reservationsToSave = new ArrayList<>();
+        List<GymReservation> savedReservations = new ArrayList<>();
+
+        // Primero, crear todas las instancias de reserva sin guardarlas todavía
+        for (GymSchedules schedule : schedules) {
+            GymReservation reservation = new GymReservation();
+            reservation.setUserId(userId);
+            reservation.setScheduleId(schedule.getId());
+            reservation.setScheduleGroupId(scheduleGroupId);
+            reservation.setUserName(userName);
+            reservation.setIdentification(identification);
+            reservation.setInstitutionRole(institutionRole);
+            reservation.setStartTime(schedule.getStartTime());
+            reservation.setEndTime(schedule.getEndTime());
+            reservation.setDayOfWeek(schedule.getDayOfWeek());
+
+            reservationsToSave.add(reservation);
+        }
+
+        // Luego, guardar todas las reservas y actualizar las capacidades
+        for (GymReservation reservation : reservationsToSave) {
+            // Guardar la reserva
+            GymReservation savedReservation = gymReservationRepository.save(reservation);
+            savedReservations.add(savedReservation);
+
+            // Actualizar la capacidad del horario (reducir en 1)
+            GymSchedules schedule = getGymScheduleById(reservation.getScheduleId());
+            if (schedule != null && schedule.getCapacity() > 0) {
+                schedule.setCapacity(schedule.getCapacity() - 1);
+                gymSchedulesRepository.save(schedule);
+            }
+        }
+
+        return savedReservations;
+    }
+
+    @Override
     public GymSchedules getGymScheduleById(String scheduleId) {
         Optional<GymSchedules> schedule = gymSchedulesRepository.findById(scheduleId);
         return schedule.orElse(null);
+    }
+
+    @Override
+    public List<GymSchedules> getGymSchedulesByGroupId(String scheduleGroupId) {
+        return gymSchedulesRepository.findByScheduleGroupId(scheduleGroupId);
     }
 
     @Override
@@ -153,24 +199,60 @@ public class GymReservationServiceImpl implements GymReservationService {
 
             GymReservation reservation = reservationOpt.get();
 
-            // Buscar el horario correspondiente para incrementar su capacidad
-            List<GymSchedules> schedules = gymSchedulesRepository.findAll();
-            for (GymSchedules schedule : schedules) {
-                if (schedule.getDayOfWeek().equals(reservation.getDayOfWeek()) &&
-                        schedule.getStartTime().equals(reservation.getStartTime()) &&
-                        schedule.getEndTime().equals(reservation.getEndTime())) {
-                    // Incrementar la capacidad del horario
-                    schedule.setCapacity(schedule.getCapacity() + 1);
-                    gymSchedulesRepository.save(schedule);
-                    break;
-                }
-            }
+            // Incrementar la capacidad del horario correspondiente
+            increaseScheduleCapacity(reservation);
 
             // Eliminar la reserva
             gymReservationRepository.deleteById(reservationId);
             return true;
         } catch (Exception e) {
             return false;
+        }
+    }
+
+    @Override
+    public boolean cancelReservationWithReason(String reservationId, String cancellationReason) {
+        try {
+            // Verificar si se puede cancelar la reserva (con 5 horas de anticipación)
+            if (!canCancelReservation(reservationId)) {
+                return false;
+            }
+
+            Optional<GymReservation> reservationOpt = gymReservationRepository.findById(reservationId);
+            if (!reservationOpt.isPresent()) {
+                return false;
+            }
+
+            GymReservation reservation = reservationOpt.get();
+
+            // Guardar la razón de cancelación (aunque vamos a eliminar la reserva, esto podría
+            // guardarse en una colección separada para estadísticas si se desea en el futuro)
+            reservation.setCancellationReason(cancellationReason);
+
+            // Incrementar la capacidad del horario correspondiente
+            increaseScheduleCapacity(reservation);
+
+            // Eliminar la reserva
+            gymReservationRepository.deleteById(reservationId);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // Método auxiliar para aumentar la capacidad del horario
+    private void increaseScheduleCapacity(GymReservation reservation) {
+        // Buscar el horario correspondiente para incrementar su capacidad
+        List<GymSchedules> schedules = gymSchedulesRepository.findAll();
+        for (GymSchedules schedule : schedules) {
+            if (schedule.getDayOfWeek().equals(reservation.getDayOfWeek()) &&
+                    schedule.getStartTime().equals(reservation.getStartTime()) &&
+                    schedule.getEndTime().equals(reservation.getEndTime())) {
+                // Incrementar la capacidad del horario
+                schedule.setCapacity(schedule.getCapacity() + 1);
+                gymSchedulesRepository.save(schedule);
+                break;
+            }
         }
     }
 
