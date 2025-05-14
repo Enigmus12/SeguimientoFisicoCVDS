@@ -2,9 +2,8 @@ package Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces;
 
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.model.PhysicalRecord;
 import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.stereotype.Repository;
+import java.util.Optional;
 
-@Repository
-public interface PhysicalRecordMongoRepository extends MongoRepository<PhysicalRecord, String> {
-    PhysicalRecord findByUserName(String userName);
+public interface PhysicalRecordRepository extends MongoRepository<PhysicalRecord, String> {
+    Optional<PhysicalRecord> findByUserId(Integer userId);
 }

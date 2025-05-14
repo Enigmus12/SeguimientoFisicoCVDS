@@ -1,10 +1,8 @@
 package Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.controller;
 
-import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.config.UserServiceException;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.dto.PhysicalRecordDTO;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.dto.UserResponseDTO;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.model.PhysicalRecord;
-import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.model.User;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.PhysicalTrackingService;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,10 +14,9 @@ import org.springframework.web.client.RestTemplate;
 import java.util.Date;
 import java.util.List;
 
-
 @RestController
 @RequestMapping("/tracking-service")
-@CrossOrigin(origins = "*") // Para permitir peticiones desde el frontend
+@CrossOrigin(origins = "*")
 public class PhysicalTrackingController {
 
     @Autowired
@@ -28,12 +25,10 @@ public class PhysicalTrackingController {
     @Autowired
     private JwtUtil jwtUtil;
 
-    // Crear un nuevo registro físico
     @PostMapping("/records")
     public ResponseEntity<PhysicalRecord> registerPhysicalData(@RequestBody PhysicalRecordDTO recordDTO) {
-        PhysicalRecord record = new PhysicalRecord(recordDTO);
-        PhysicalRecord savedRecord = trackingService.createPhysicalRecord(record);
-        return new ResponseEntity<>(savedRecord, HttpStatus.CREATED);
+        PhysicalRecord saved = trackingService.savePhysicalRecord(recordDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @PostMapping("/records/auto")
@@ -42,92 +37,83 @@ public class PhysicalTrackingController {
             @RequestHeader("Authorization") String authHeader) {
 
         try {
-            // Extraer el token del header
             String token = authHeader.substring(7);
-            String username = jwtUtil.extractUserId(token); // El token contiene el userId (nombre de usuario)
+            String username = jwtUtil.extractUserId(token);
 
-            // Llamar al endpoint existente para obtener los datos del usuario
             RestTemplate restTemplate = new RestTemplate();
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", authHeader);
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
-            ResponseEntity<UserResponseDTO> userResponse = restTemplate.exchange(
+            ResponseEntity<UserResponseDTO> response = restTemplate.exchange(
                     "http://localhost:8080/user-service/users/" + username,
                     HttpMethod.GET,
                     entity,
                     UserResponseDTO.class
             );
 
-            if (userResponse.getStatusCode() != HttpStatus.OK) {
-                return new ResponseEntity<>("Error al obtener datos del usuario",
-                        userResponse.getStatusCode());
+            if (response.getStatusCode() != HttpStatus.OK) {
+                return ResponseEntity.status(response.getStatusCode())
+                        .body("Error al obtener datos del usuario.");
             }
 
-            UserResponseDTO userData = userResponse.getBody();
+            UserResponseDTO userData = response.getBody();
 
-            // Crear el registro físico completo
             PhysicalRecord record = new PhysicalRecord();
-            record.setUserName(userData.getUserId()); // El userId es el nombre de usuario
-            record.setUserId(userData.getNumberId()); // El numberId es el número de cédula
+            record.setUserName(userData.getUserId());
+            record.setUserId(userData.getNumberId());
             record.setRole(userData.getRole());
             record.setRegistrationDate(new Date());
             record.setWeight(simplifiedDTO.getWeight());
             record.setBodyMeasurements(simplifiedDTO.getBodyMeasurements());
             record.setPhysicalGoal(simplifiedDTO.getPhysicalGoal());
-            // Dejar vacíos observations y activeRoutine
             record.setObservations("");
             record.setActiveRoutine("");
 
-            // Guardar el registro
-            PhysicalRecord savedRecord = trackingService.createPhysicalRecord(record);
-            return new ResponseEntity<>(savedRecord, HttpStatus.CREATED);
+            PhysicalRecord saved = trackingService.createPhysicalRecord(record);
+            return ResponseEntity.status(HttpStatus.CREATED).body(saved);
 
         } catch (HttpClientErrorException.NotFound e) {
-            return new ResponseEntity<>("Usuario no encontrado: " + e.getMessage(),
-                    HttpStatus.NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Usuario no encontrado: " + e.getMessage());
         } catch (Exception e) {
-            return new ResponseEntity<>("Error al procesar la solicitud: " + e.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al procesar la solicitud: " + e.getMessage());
         }
     }
 
-    // Obtener Todos los Registros
     @GetMapping("/records")
-    public List<PhysicalRecord> records(){
-        return trackingService.getAllrecords();
+    public ResponseEntity<List<PhysicalRecord>> getAllRecords() {
+        return ResponseEntity.ok(trackingService.getAllRecords());
     }
 
-    // Obtener el historial de un usuario
     @GetMapping("/records/user/{username}")
-    public ResponseEntity<List<PhysicalRecord>> getHistory(@PathVariable String username) {
-        List<PhysicalRecord> records = trackingService.getUserPhysicalHistory(username);
-        return new ResponseEntity<>(records, HttpStatus.OK);
+    public ResponseEntity<PhysicalRecord> getHistoryByUser(@PathVariable String username) {
+        PhysicalRecord record = trackingService.getUserPhysicalHistory(username);
+        return record != null ?
+            ResponseEntity.ok(record) :
+            ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
-    // Obtener un registro específico por ID
+
     @GetMapping("/records/{id}")
     public ResponseEntity<PhysicalRecord> getRecord(@PathVariable String id) {
         PhysicalRecord record = trackingService.getPhysicalRecord(id);
-        if (record != null) {
-            return new ResponseEntity<>(record, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+        return record != null ?
+                ResponseEntity.ok(record) :
+                ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
     @PutMapping("/records/{id}")
-    public ResponseEntity<Void> updateRecord(@PathVariable String id, @RequestBody PhysicalRecordDTO recordDTO) {
-        PhysicalRecord existingRecord = trackingService.getPhysicalRecord(id);
-        if (existingRecord != null) {
-            // Solo actualizamos los campos observations y activeRoutine, ignorando el resto
-            existingRecord.setObservations(recordDTO.getObservations());
-            existingRecord.setActiveRoutine(recordDTO.getActiveRoutine());
-
-            trackingService.updatePhysicalRecord(existingRecord);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    public ResponseEntity<Void> updateRecord(@PathVariable String id,
+                                             @RequestBody PhysicalRecordDTO recordDTO) {
+        PhysicalRecord existing = trackingService.getPhysicalRecord(id);
+        if (existing != null) {
+            existing.setObservations(recordDTO.getObservations());
+            existing.setActiveRoutine(recordDTO.getActiveRoutine());
+            trackingService.updatePhysicalRecord(existing);
+            return ResponseEntity.noContent().build();
         }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 }

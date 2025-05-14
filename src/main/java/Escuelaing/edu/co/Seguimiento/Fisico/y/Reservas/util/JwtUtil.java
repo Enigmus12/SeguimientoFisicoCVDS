@@ -14,8 +14,10 @@ import java.util.function.Function;
 
 @Component
 public class JwtUtil {
-    private final Key SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-    private final long TOKEN_VALIDITY = 5 * 60 * 60 * 1000; // 5 horas en milisegundos
+
+    private static final String SECRET = "mi-clave-secreta-super-segura-123456";
+    private final Key SECRET_KEY = Keys.hmacShaKeyFor(SECRET.getBytes());
+    private final long TOKEN_VALIDITY = 5 * 60 * 60 * 1000; // 5 horas
 
     public String extractUserId(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -60,5 +62,15 @@ public class JwtUtil {
     public Boolean validateToken(String token, String userId) {
         final String extractedUserId = extractUserId(token);
         return (extractedUserId.equals(userId) && !isTokenExpired(token));
+    }
+
+    // Añadir en JwtUtil
+    public boolean isSignatureValid(String token) {
+        try {
+            Jwts.parserBuilder().setSigningKey(SECRET_KEY).build().parseClaimsJws(token);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

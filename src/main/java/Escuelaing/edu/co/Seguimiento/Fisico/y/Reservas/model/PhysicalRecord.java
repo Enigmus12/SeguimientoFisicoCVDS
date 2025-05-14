@@ -18,7 +18,7 @@ public class PhysicalRecord {
     @MongoId
     private String id; // Identificador único del registro
     private String userName;
-    private Integer userId;
+    private String userId;
     private String role;
     private Date registrationDate;
     private double weight;
@@ -28,7 +28,7 @@ public class PhysicalRecord {
     private String activeRoutine;
 
     @PersistenceCreator
-    public PhysicalRecord(String id, String userName,Integer userId ,String role ,Date registrationDate, double weight, Map<String, Double> bodyMeasurements, String physicalGoal, String observations, String activeRoutine) {
+    public PhysicalRecord(String id, String userName,String userId ,String role ,Date registrationDate, double weight, Map<String, Double> bodyMeasurements, String physicalGoal, String observations, String activeRoutine) {
         this.id = id;
         this.userName = userName;
         this.userId = userId;
