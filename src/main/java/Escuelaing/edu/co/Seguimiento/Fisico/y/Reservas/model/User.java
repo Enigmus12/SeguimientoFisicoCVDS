@@ -4,12 +4,14 @@ import java.util.List;
 
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.dto.UserDTO;
 import lombok.Data;
+import lombok.ToString;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceCreator;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data // Lombok generará automáticamente getters, setters, toString, equals, hashCode
 @Document(collection = "users")
+@ToString
 public class User {
     @Id
     private String userId;
