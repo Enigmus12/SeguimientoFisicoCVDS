@@ -49,15 +49,18 @@ public class UserServiceImpl implements UserService {
             // Buscar usuario por nombre de usuario
             User user = userRepository.findById(authenticationDTO.getUserId());
 
+            System.out.println(authenticationDTO.getUserId());
+
             // Verificar la contraseña
             if (user.getPassword().equals(authenticationDTO.getPassword())) {
                 // Generar token JWT
-                String token = jwtUtil.generateToken(user.getId());
+                String token = jwtUtil.generateToken(user.getUserId());
                 return new AuthenticationResponseDTO(true, user, token, "Autenticación exitosa");
             } else {
                 return new AuthenticationResponseDTO(false, null, null, "Contraseña incorrecta");
             }
         } catch (UserServiceException e) {
+            System.out.println(e.toString());
             // Usuario no encontrado
             return new AuthenticationResponseDTO(false, null, null, "Usuario no encontrado");
         }

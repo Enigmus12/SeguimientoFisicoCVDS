@@ -17,9 +17,8 @@ import org.springframework.data.mongodb.core.mapping.MongoId;
 public class PhysicalRecord {
     @MongoId
     private String id; // Identificador único del registro
-    private String userId;
     private String userName;
-    private Integer numberId;
+    private String userId;
     private String role;
     private Date registrationDate;
     private double weight;
@@ -29,11 +28,10 @@ public class PhysicalRecord {
     private String activeRoutine;
 
     @PersistenceCreator
-    public PhysicalRecord(String id, String userId ,String userName,Integer numberId ,String role ,Date registrationDate, double weight, Map<String, Double> bodyMeasurements, String physicalGoal, String observations, String activeRoutine) {
+    public PhysicalRecord(String id, String userName,String userId ,String role ,Date registrationDate, double weight, Map<String, Double> bodyMeasurements, String physicalGoal, String observations, String activeRoutine) {
         this.id = id;
-        this.userId = userId;
         this.userName = userName;
-        this.numberId = numberId;
+        this.userId = userId;
         this.role = role;
         this.registrationDate = registrationDate;
         this.weight = weight;

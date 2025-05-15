@@ -7,8 +7,10 @@ import java.util.List;
 
 public interface RoutineService {
     Routine createRoutine(RoutineDTO routineDTO);
+    Routine saveRoutine(Routine routine);
     List<Routine> getAllRoutines();
     Routine getRoutineById(String id);
     Routine updateRoutine(String id, RoutineDTO routineDTO);
     boolean deleteRoutine(String id);
+    List<Routine> getRecommendations(String userId);
 }
