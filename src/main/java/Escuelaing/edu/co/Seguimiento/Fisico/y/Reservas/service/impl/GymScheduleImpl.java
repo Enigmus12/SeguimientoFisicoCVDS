@@ -2,13 +2,16 @@ package Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.impl;
 
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.dto.GymSchedulesDTO;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.model.GymSchedules;
-import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.GymScheduleMongoRepository;
-import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.GymScheduleService;
+import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.Mongo.GymScheduleMongoRepository;
+import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.Service.GymScheduleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -34,14 +37,12 @@ public class GymScheduleImpl implements GymScheduleService {
 
     @Override
     public List<GymSchedules> createSemestralSchedules(GymSchedulesDTO gymSchedulesDTO) {
+        Map<String, LocalTime[]> dayTimeMap = gymSchedulesDTO.getDayTimeMap();
+
         // Validamos que se seleccionen máximo 3 días
-        if (gymSchedulesDTO.getDaysOfWeek() == null || gymSchedulesDTO.getDaysOfWeek().isEmpty() ||
-                gymSchedulesDTO.getDaysOfWeek().size() > 3) {
+        if (dayTimeMap == null || dayTimeMap.isEmpty() || dayTimeMap.size() > 3) {
             throw new IllegalArgumentException("Se deben seleccionar entre 1 y 3 días de la semana");
         }
-
-        // Validamos el formato de horas (deben tener intervalo de 1 hora)
-        validateTimeFormat(gymSchedulesDTO.getStartTime(), gymSchedulesDTO.getEndTime());
 
         // Generamos un ID de grupo para vincular todos los horarios creados
         String scheduleGroupId = UUID.randomUUID().toString();
@@ -49,8 +50,8 @@ public class GymScheduleImpl implements GymScheduleService {
         // Obtener fechas de semestre y capacidad existentes si hay horarios
         List<GymSchedules> existingSchedules = gymScheduleMongoRepository.findAll();
 
-        String startDate = gymSchedulesDTO.getStartDate();
-        String endDate = gymSchedulesDTO.getEndDate();
+        LocalDate startDate = gymSchedulesDTO.getStartDate();
+        LocalDate endDate = gymSchedulesDTO.getEndDate();
         Integer capacity = gymSchedulesDTO.getCapacity();
 
         // Si hay horarios existentes, usamos su información de fechas y capacidad
@@ -65,10 +66,10 @@ public class GymScheduleImpl implements GymScheduleService {
             }
         } else {
             // Si es el primer horario, validamos que se proporcionen todos los datos requeridos
-            if (startDate == null || startDate.isEmpty()) {
+            if (startDate == null) {
                 throw new IllegalArgumentException("Para el primer horario, debe especificar la fecha de inicio del semestre");
             }
-            if (endDate == null || endDate.isEmpty()) {
+            if (endDate == null) {
                 throw new IllegalArgumentException("Para el primer horario, debe especificar la fecha de fin del semestre");
             }
             if (capacity == null) {
@@ -78,22 +79,35 @@ public class GymScheduleImpl implements GymScheduleService {
 
         List<GymSchedules> createdSchedules = new ArrayList<>();
 
-        // Para cada día seleccionado creamos un horario
-        for (String dayOfWeek : gymSchedulesDTO.getDaysOfWeek()) {
-            // Verificamos si hay solapamiento con horarios existentes
-            List<GymSchedules> overlappingSchedules = gymScheduleMongoRepository.findOverlappingSchedules(
+        // Para cada día seleccionado creamos un horario con sus horarios específicos
+        for (Map.Entry<String, LocalTime[]> entry : dayTimeMap.entrySet()) {
+            String dayOfWeek = entry.getKey();
+            LocalTime[] times = entry.getValue();
+
+            if (times == null || times.length != 2 || times[0] == null || times[1] == null) {
+                throw new IllegalArgumentException("Se debe proporcionar un array con hora de inicio y fin para el día " + dayOfWeek);
+            }
+
+            LocalTime startTime = times[0];
+            LocalTime endTime = times[1];
+
+            // Validamos el formato de horas para cada día (deben tener intervalo de 1 hora)
+            validateTimeFormat(startTime, endTime);
+
+            // Verificamos si hay solapamiento de horarios para este día específico
+            boolean hasOverlap = checkForTimeOverlap(
                     dayOfWeek,
-                    gymSchedulesDTO.getStartTime(),
-                    gymSchedulesDTO.getEndTime(),
+                    startTime,
+                    endTime,
                     startDate,
                     endDate
             );
 
-            if (!overlappingSchedules.isEmpty()) {
+            if (hasOverlap) {
                 throw new IllegalStateException(
                         "Ya existe un horario para el día " + dayOfWeek +
-                                " de " + gymSchedulesDTO.getStartTime() +
-                                " a " + gymSchedulesDTO.getEndTime() +
+                                " de " + startTime +
+                                " a " + endTime +
                                 " que se solapa con el periodo seleccionado"
                 );
             }
@@ -102,8 +116,8 @@ public class GymScheduleImpl implements GymScheduleService {
             GymSchedules gymSchedule = new GymSchedules(
                     startDate,
                     endDate,
-                    gymSchedulesDTO.getStartTime(),
-                    gymSchedulesDTO.getEndTime(),
+                    startTime,
+                    endTime,
                     dayOfWeek,
                     capacity,
                     scheduleGroupId
@@ -113,6 +127,57 @@ public class GymScheduleImpl implements GymScheduleService {
         }
 
         return createdSchedules;
+    }
+
+    /**
+     * Verifica si existe solapamiento de horarios para un día y rango de horas específico
+     */
+    private boolean checkForTimeOverlap(String dayOfWeek, LocalTime startTime, LocalTime endTime,
+                                        LocalDate startDate, LocalDate endDate) {
+        // Primero obtenemos horarios que coincidan con el día de la semana y el periodo del semestre
+        List<GymSchedules> sameWeekdaySchedules = gymScheduleMongoRepository
+                .findByDayOfWeekAndStartDateLessThanEqualAndEndDateGreaterThanEqual(
+                        dayOfWeek, endDate, startDate);
+
+        // Luego verificamos solapamiento de horas
+        return sameWeekdaySchedules.stream().anyMatch(schedule -> {
+            // Hay solapamiento si:
+            // 1. El horario existente comienza durante nuestro nuevo horario
+            boolean existingStartsDuringNew =
+                    (schedule.getStartTime().compareTo(startTime) >= 0 &&
+                            schedule.getStartTime().compareTo(endTime) < 0);
+
+            // 2. El horario existente termina durante nuestro nuevo horario
+            boolean existingEndsDuringNew =
+                    (schedule.getEndTime().compareTo(startTime) > 0 &&
+                            schedule.getEndTime().compareTo(endTime) <= 0);
+
+            // 3. El horario existente abarca completamente nuestro nuevo horario
+            boolean existingContainsNew =
+                    (schedule.getStartTime().compareTo(startTime) <= 0 &&
+                            schedule.getEndTime().compareTo(endTime) >= 0);
+
+            // 4. Nuestro nuevo horario abarca completamente el horario existente
+            boolean newContainsExisting =
+                    (startTime.compareTo(schedule.getStartTime()) <= 0 &&
+                            endTime.compareTo(schedule.getEndTime()) >= 0);
+
+            return existingStartsDuringNew || existingEndsDuringNew ||
+                    existingContainsNew || newContainsExisting;
+        });
+    }
+
+    /**
+     * Método alternativo que usa la consulta MongoDB directa para verificar solapamientos
+     */
+    private boolean checkForOverlappingSchedules(String dayOfWeek, LocalTime startTime, LocalTime endTime,
+                                                 LocalDate startDate, LocalDate endDate) {
+        // Usamos la consulta MongoDB directamente
+        List<GymSchedules> overlappingSchedules = gymScheduleMongoRepository.findOverlappingSchedules(
+                dayOfWeek, startTime, endTime, startDate, endDate
+        );
+
+        return !overlappingSchedules.isEmpty();
     }
 
     @Override
@@ -153,26 +218,14 @@ public class GymScheduleImpl implements GymScheduleService {
     }
 
     // Método auxiliar para validar el formato de las horas
-    private void validateTimeFormat(String startTime, String endTime) {
-        // Verificamos que las horas tengan el formato correcto (HH:MM)
-        if (!startTime.matches("^([01]?[0-9]|2[0-3]):[0-5][0-9]$") ||
-                !endTime.matches("^([01]?[0-9]|2[0-3]):[0-5][0-9]$")) {
-            throw new IllegalArgumentException("El formato de hora debe ser HH:MM");
+    private void validateTimeFormat(LocalTime startTime, LocalTime endTime) {
+        if (startTime == null || endTime == null) {
+            throw new IllegalArgumentException("Las horas de inicio y fin son obligatorias");
         }
 
-        // Verificamos que la hora de fin sea mayor que la hora de inicio
-        String[] startParts = startTime.split(":");
-        String[] endParts = endTime.split(":");
-
-        int startHour = Integer.parseInt(startParts[0]);
-        int endHour = Integer.parseInt(endParts[0]);
-
-        int startMinute = Integer.parseInt(startParts[1]);
-        int endMinute = Integer.parseInt(endParts[1]);
-
         // Convertimos a minutos para comparar
-        int startTotalMinutes = startHour * 60 + startMinute;
-        int endTotalMinutes = endHour * 60 + endMinute;
+        int startTotalMinutes = startTime.getHour() * 60 + startTime.getMinute();
+        int endTotalMinutes = endTime.getHour() * 60 + endTime.getMinute();
 
         // La diferencia debe ser exactamente de 60 minutos (1 hora)
         if (endTotalMinutes - startTotalMinutes != 60) {

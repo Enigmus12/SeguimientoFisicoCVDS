@@ -25,6 +25,8 @@ public class SecurityConfig {
                         .requestMatchers("/routine-service/**").permitAll()
                         .requestMatchers("/gym-schedules/**").permitAll()
                         .requestMatchers("/gym/**").permitAll()
+                        .requestMatchers("/api/holidays/**").permitAll()
+                        .requestMatchers("/daily-schedule/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

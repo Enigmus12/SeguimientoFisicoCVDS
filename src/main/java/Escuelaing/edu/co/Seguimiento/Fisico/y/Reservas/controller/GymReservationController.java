@@ -1,10 +1,9 @@
 package Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.controller;
 
-import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.dto.CancellationRequestDTO;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.dto.UserResponseDTO;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.model.GymReservation;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.model.GymSchedules;
-import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.GymReservationService;
+import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.Service.GymReservationService;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -96,81 +95,21 @@ public class GymReservationController {
                     schedules
             );
 
-            return new ResponseEntity<>(savedReservations, HttpStatus.CREATED);
-
-        } catch (HttpClientErrorException.NotFound e) {
-            return new ResponseEntity<>("Usuario no encontrado: " + e.getMessage(),
-                    HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>("Error al procesar la solicitud: " + e.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @PostMapping("/reserve/{scheduleId}")
-    public ResponseEntity<?> reserveGym(
-            @PathVariable String scheduleId,
-            @RequestHeader("Authorization") String authHeader) {
-
-        try {
-            // Extraer el token del header
-            String token = authHeader.substring(7);
-            String userId = jwtUtil.extractUserId(token);
-
-            // Llamar al endpoint para obtener los datos del usuario
-            RestTemplate restTemplate = new RestTemplate();
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", authHeader);
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-
-            ResponseEntity<UserResponseDTO> userResponse = restTemplate.exchange(
-                    "http://localhost:8080/user-service/users/" + userId,
-                    HttpMethod.GET,
+            // Invocar el método PUT de DailyScheduleController para agregar al usuario a los horarios diarios
+            String putUrl = "http://localhost:8080/daily-schedule/" + scheduleGroupId + "/add-user/" + userId;
+            ResponseEntity<String> putResponse = restTemplate.exchange(
+                    putUrl,
+                    HttpMethod.PUT,
                     entity,
-                    UserResponseDTO.class
+                    String.class
             );
 
-            if (userResponse.getStatusCode() != HttpStatus.OK) {
-                return new ResponseEntity<>("Error al obtener datos del usuario",
-                        userResponse.getStatusCode());
+            if (!putResponse.getStatusCode().is2xxSuccessful()) {
+                return new ResponseEntity<>("Reserva creada pero ocurrió un error al agregar al usuario en los horarios diarios",
+                        putResponse.getStatusCode());
             }
 
-            UserResponseDTO userData = userResponse.getBody();
-
-            // Obtener el horario del gimnasio
-            GymSchedules schedule = gymReservationService.getGymScheduleById(scheduleId);
-            if (schedule == null) {
-                return new ResponseEntity<>("Horario de gimnasio no encontrado",
-                        HttpStatus.NOT_FOUND);
-            }
-
-            // Verificar si hay capacidad disponible
-            if (!gymReservationService.hasAvailableCapacity(scheduleId)) {
-                return new ResponseEntity<>("No hay cupos disponibles para este horario",
-                        HttpStatus.BAD_REQUEST);
-            }
-
-            // Verificar si el usuario ya tiene una reserva para este horario
-            if (gymReservationService.hasUserReservation(userId, scheduleId)) {
-                return new ResponseEntity<>("Ya tienes una reserva para este horario",
-                        HttpStatus.CONFLICT);
-            }
-
-            // Crear la reserva
-            GymReservation reservation = new GymReservation();
-            reservation.setUserId(userId);
-            reservation.setScheduleId(scheduleId);
-            reservation.setScheduleGroupId(schedule.getScheduleGroupId()); // Guardamos también el scheduleGroupId
-            reservation.setUserName(userData.getUserName());
-            reservation.setIdentification(userData.getNumberId().toString());
-            reservation.setInstitutionRole(userData.getRole());
-            reservation.setStartTime(schedule.getStartTime());
-            reservation.setEndTime(schedule.getEndTime());
-            reservation.setDayOfWeek(schedule.getDayOfWeek());
-
-            // Guardar la reserva
-            GymReservation savedReservation = gymReservationService.createReservation(reservation, scheduleId);
-            return new ResponseEntity<>(savedReservation, HttpStatus.CREATED);
+            return new ResponseEntity<>(savedReservations, HttpStatus.CREATED);
 
         } catch (HttpClientErrorException.NotFound e) {
             return new ResponseEntity<>("Usuario no encontrado: " + e.getMessage(),
@@ -193,78 +132,6 @@ public class GymReservationController {
             return new ResponseEntity<>(userReservations, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Error al obtener las reservas: " + e.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    // Método actualizado para cancelar reservas con observación obligatoria
-    @PostMapping("/cancel-reservation")
-    public ResponseEntity<?> cancelReservation(
-            @RequestBody CancellationRequestDTO cancellationRequest,
-            @RequestHeader("Authorization") String authHeader) {
-        try {
-            // Validar que se haya proporcionado una razón de cancelación
-            if (cancellationRequest.getCancellationReason() == null ||
-                    cancellationRequest.getCancellationReason().trim().isEmpty()) {
-                return new ResponseEntity<>("Debe proporcionar una razón para la cancelación",
-                        HttpStatus.BAD_REQUEST);
-            }
-
-            // Extraer el token del header
-            String token = authHeader.substring(7);
-            String userId = jwtUtil.extractUserId(token);
-
-            String reservationId = cancellationRequest.getReservationId();
-
-            // Verificar si la reserva pertenece al usuario
-            boolean isUserReservation = gymReservationService.isUserReservation(userId, reservationId);
-            if (!isUserReservation) {
-                return new ResponseEntity<>("No tienes permiso para cancelar esta reserva",
-                        HttpStatus.FORBIDDEN);
-            }
-
-            // Verificar si la reserva se puede cancelar (5 horas antes)
-            if (!gymReservationService.canCancelReservation(reservationId)) {
-                return new ResponseEntity<>("Las reservas solo pueden cancelarse con al menos 5 horas de anticipación",
-                        HttpStatus.BAD_REQUEST);
-            }
-
-            // Cancelar la reserva con la razón proporcionada
-            boolean canceled = gymReservationService.cancelReservationWithReason(
-                    reservationId,
-                    cancellationRequest.getCancellationReason()
-            );
-
-            if (canceled) {
-                return new ResponseEntity<>("Reserva cancelada exitosamente", HttpStatus.OK);
-            } else {
-                return new ResponseEntity<>("No se pudo cancelar la reserva",
-                        HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-        } catch (Exception e) {
-            return new ResponseEntity<>("Error al cancelar la reserva: " + e.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @GetMapping("/schedules")
-    public ResponseEntity<?> getAllSchedules() {
-        try {
-            List<GymSchedules> schedules = gymReservationService.getAllGymSchedules();
-            return new ResponseEntity<>(schedules, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>("Error al obtener los horarios: " + e.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @GetMapping("/schedules/available")
-    public ResponseEntity<?> getAvailableSchedules() {
-        try {
-            List<GymSchedules> availableSchedules = gymReservationService.getAvailableGymSchedules();
-            return new ResponseEntity<>(availableSchedules, HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>("Error al obtener los horarios disponibles: " + e.getMessage(),
                     HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

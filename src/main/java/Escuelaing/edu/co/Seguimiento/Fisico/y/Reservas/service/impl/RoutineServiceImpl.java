@@ -2,8 +2,8 @@ package Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.impl;
 
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.dto.RoutineDTO;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.model.Routine;
-import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.RoutineMongoRepository;
-import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.RoutineService;
+import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.Mongo.RoutineMongoRepository;
+import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.Service.RoutineService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

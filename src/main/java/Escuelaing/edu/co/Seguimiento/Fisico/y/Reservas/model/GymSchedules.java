@@ -1,5 +1,6 @@
 package Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.PersistenceConstructor;
@@ -7,6 +8,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Data
 @NoArgsConstructor
@@ -14,18 +16,27 @@ import java.time.LocalDate;
 public class GymSchedules {
     @MongoId
     private String id;
-    private String startDate;    // Fecha de inicio (formato "yyyy-MM-dd")
-    private String endDate;      // Fecha de fin (formato "yyyy-MM-dd")
-    private String startTime;    // Hora de inicio (formato "HH:MM")
-    private String endTime;      // Hora de fin (formato "HH:MM")
-    private String dayOfWeek;    // Día de la semana (MONDAY, TUESDAY, etc.)
-    private Integer capacity;    // Capacidad del horario
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate startDate;    // Fecha de inicio
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate endDate;      // Fecha de fin
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
+    private LocalTime startTime;    // Hora de inicio
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
+    private LocalTime endTime;      // Hora de fin
+
+    private String dayOfWeek;       // Día de la semana (MONDAY, TUESDAY, etc.)
+    private Integer capacity;       // Capacidad del horario
 
     // Grupo de horarios (para vincular horarios del mismo semestre)
     private String scheduleGroupId;
 
     @PersistenceConstructor
-    public GymSchedules(String startDate, String endDate, String startTime, String endTime,
+    public GymSchedules(LocalDate startDate, LocalDate endDate, LocalTime startTime, LocalTime endTime,
                         String dayOfWeek, Integer capacity, String scheduleGroupId) {
         this.startDate = startDate;
         this.endDate = endDate;

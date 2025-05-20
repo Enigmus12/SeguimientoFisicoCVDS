@@ -1,29 +1,27 @@
 package Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.util.List;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.Map;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class GymSchedulesDTO {
-    // Fecha de inicio del semestre
-    private String startDate;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate startDate;
 
-    // Fecha de fin del semestre
-    private String endDate;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate endDate;
 
-    // Hora de inicio (igual para todos los días seleccionados)
-    private String startTime;
+    // Mapa donde la clave es el día de la semana y el valor es un array con dos elementos:
+    // índice 0: hora de inicio, índice 1: hora de fin
+    private Map<String, LocalTime[]> dayTimeMap;
 
-    // Hora de fin (igual para todos los días seleccionados)
-    private String endTime;
-
-    // Lista de días de la semana seleccionados (máximo 3)
-    private List<String> daysOfWeek;
-
-    // Capacidad (opcional)
     private Integer capacity;
 }
