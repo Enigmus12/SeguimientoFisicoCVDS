@@ -1,10 +1,13 @@
 package Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.PersistenceCreator;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoId;
+
+import java.time.LocalTime;
 
 @Data
 @NoArgsConstructor
@@ -18,8 +21,12 @@ public class GymReservation {
     private String userName;
     private String identification;
     private String institutionRole;
-    private String startTime;
-    private String endTime;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
+    private LocalTime startTime;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
+    private LocalTime endTime;
+
     private String dayOfWeek;
-    private String cancellationReason; // campo para la razón de cancelación
 }

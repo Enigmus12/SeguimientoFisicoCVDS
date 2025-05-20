@@ -1,4 +1,4 @@
-package Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces;
+package Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.Mongo;
 
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.model.GymReservation;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -9,5 +9,4 @@ import java.util.List;
 @Repository
 public interface GymReservationMongoRepository extends MongoRepository<GymReservation, String> {
     List<GymReservation> findByUserId(String userId);
-    boolean existsByUserIdAndDayOfWeekAndStartTimeAndEndTime(String userId, String dayOfWeek, String startTime, String endTime);
 }

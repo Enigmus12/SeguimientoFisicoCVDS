@@ -1,4 +1,4 @@
-package Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces;
+package Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.Mongo;
 
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.model.User;
 import org.springframework.data.mongodb.repository.MongoRepository;

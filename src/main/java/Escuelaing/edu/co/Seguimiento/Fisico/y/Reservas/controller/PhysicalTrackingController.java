@@ -1,11 +1,9 @@
 package Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.controller;
 
-import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.config.UserServiceException;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.dto.PhysicalRecordDTO;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.dto.UserResponseDTO;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.model.PhysicalRecord;
-import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.model.User;
-import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.PhysicalTrackingService;
+import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.Service.PhysicalTrackingService;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;

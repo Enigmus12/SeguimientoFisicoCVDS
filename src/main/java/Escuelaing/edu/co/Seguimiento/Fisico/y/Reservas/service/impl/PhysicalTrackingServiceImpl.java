@@ -1,8 +1,8 @@
 package Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.impl;
 
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.model.PhysicalRecord;
-import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.PhysicalRecordMongoRepository;
-import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.PhysicalTrackingService;
+import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.Mongo.PhysicalRecordMongoRepository;
+import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.Service.PhysicalTrackingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
