@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UserResponseDTO {
     private String userId;
+    private String userName;
     private Integer numberId;
     private String role;
     // Omitimos campos sensibles como password y passwordConfirmation

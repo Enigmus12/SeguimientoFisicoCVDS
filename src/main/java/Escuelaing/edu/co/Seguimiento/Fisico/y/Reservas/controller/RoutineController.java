@@ -2,7 +2,7 @@ package Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.controller;
 
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.dto.RoutineDTO;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.model.Routine;
-import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.RoutineService;
+import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.Service.RoutineService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

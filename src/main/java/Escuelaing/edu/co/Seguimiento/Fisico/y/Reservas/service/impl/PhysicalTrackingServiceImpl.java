@@ -1,8 +1,8 @@
 package Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.impl;
 
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.model.PhysicalRecord;
-import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.PhysicalRecordMongoRepository;
-import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.PhysicalTrackingService;
+import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.Mongo.PhysicalRecordMongoRepository;
+import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.Service.PhysicalTrackingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -27,8 +27,15 @@ public class PhysicalTrackingServiceImpl implements PhysicalTrackingService {
     }
 
     @Override
-    public List<PhysicalRecord> getUserPhysicalHistory(String userId) {
-        return repository.findByUserName(userId);
+    public List<PhysicalRecord> getUserPhysicalHistory(String userName) {
+        // Este método ahora debe ser explícito sobre que busca por userName
+        return repository.findByUserName(userName);
+    }
+
+    @Override
+    public List<PhysicalRecord> getUserPhysicalHistoryByUserId(String userId) {
+        // Nuevo método para buscar por userId
+        return repository.findByUserId(userId);
     }
 
     @Override

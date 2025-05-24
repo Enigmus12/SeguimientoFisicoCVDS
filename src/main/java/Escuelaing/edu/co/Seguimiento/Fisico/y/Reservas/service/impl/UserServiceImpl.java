@@ -5,8 +5,8 @@ import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.dto.AuthenticationRespons
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.dto.UserAuthenticationDTO;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.dto.UserDTO;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.model.User;
-import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.UserRepository;
-import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.UserService;
+import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.Service.UserRepository;
+import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.Service.UserService;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -52,7 +52,7 @@ public class UserServiceImpl implements UserService {
             // Verificar la contraseña
             if (user.getPassword().equals(authenticationDTO.getPassword())) {
                 // Generar token JWT
-                String token = jwtUtil.generateToken(user.getUserId());
+                String token = jwtUtil.generateToken(user.getId());
                 return new AuthenticationResponseDTO(true, user, token, "Autenticación exitosa");
             } else {
                 return new AuthenticationResponseDTO(false, null, null, "Contraseña incorrecta");

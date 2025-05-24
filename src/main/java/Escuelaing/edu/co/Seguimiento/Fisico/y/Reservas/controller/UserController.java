@@ -5,7 +5,7 @@ import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.dto.AuthenticationRespons
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.dto.UserAuthenticationDTO;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.dto.UserDTO;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.model.User;
-import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.UserService;
+import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.Service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

@@ -1,11 +1,9 @@
 package Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.controller;
 
-import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.config.UserServiceException;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.dto.PhysicalRecordDTO;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.dto.UserResponseDTO;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.model.PhysicalRecord;
-import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.model.User;
-import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.PhysicalTrackingService;
+import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.Service.PhysicalTrackingService;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -44,7 +42,7 @@ public class PhysicalTrackingController {
         try {
             // Extraer el token del header
             String token = authHeader.substring(7);
-            String username = jwtUtil.extractUserId(token); // El token contiene el userId (nombre de usuario)
+            String userId = jwtUtil.extractUserId(token); // Ahora el token contiene el userId
 
             // Llamar al endpoint existente para obtener los datos del usuario
             RestTemplate restTemplate = new RestTemplate();
@@ -53,7 +51,7 @@ public class PhysicalTrackingController {
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             ResponseEntity<UserResponseDTO> userResponse = restTemplate.exchange(
-                    "http://localhost:8080/user-service/users/" + username,
+                    "http://localhost:8080/user-service/users/" + userId, // URL para buscar por userId
                     HttpMethod.GET,
                     entity,
                     UserResponseDTO.class
@@ -68,13 +66,14 @@ public class PhysicalTrackingController {
 
             // Crear el registro físico completo
             PhysicalRecord record = new PhysicalRecord();
-            record.setUserName(userData.getUserId()); // El userId es el nombre de usuario
-            record.setUserId(userData.getNumberId()); // El numberId es el número de cédula
-            record.setRole(userData.getRole());
+            record.setUserId(userId); // Ahora usamos el userId del token
+            record.setUserName(userData.getUserName()); // El userName ahora es un atributo del usuario
+            record.setNumberId(userData.getNumberId());
             record.setRegistrationDate(new Date());
             record.setWeight(simplifiedDTO.getWeight());
             record.setBodyMeasurements(simplifiedDTO.getBodyMeasurements());
             record.setPhysicalGoal(simplifiedDTO.getPhysicalGoal());
+            record.setRole(userData.getRole());
             // Dejar vacíos observations y activeRoutine
             record.setObservations("");
             record.setActiveRoutine("");
@@ -98,10 +97,17 @@ public class PhysicalTrackingController {
         return trackingService.getAllrecords();
     }
 
-    // Obtener el historial de un usuario
+    // Obtener el historial de un usuario por userName
     @GetMapping("/records/user/{username}")
-    public ResponseEntity<List<PhysicalRecord>> getHistory(@PathVariable String username) {
+    public ResponseEntity<List<PhysicalRecord>> getHistoryByUsername(@PathVariable String username) {
         List<PhysicalRecord> records = trackingService.getUserPhysicalHistory(username);
+        return new ResponseEntity<>(records, HttpStatus.OK);
+    }
+
+    // Obtener el historial de un usuario por userId
+    @GetMapping("/records/userId/{userId}")
+    public ResponseEntity<List<PhysicalRecord>> getHistoryByUserId(@PathVariable String userId) {
+        List<PhysicalRecord> records = trackingService.getUserPhysicalHistoryByUserId(userId);
         return new ResponseEntity<>(records, HttpStatus.OK);
     }
 

@@ -2,8 +2,8 @@ package Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.impl;
 
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.config.UserServiceException;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.model.User;
-import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.UserMongoRepository;
-import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.UserRepository;
+import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.Mongo.UserMongoRepository;
+import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.Service.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
