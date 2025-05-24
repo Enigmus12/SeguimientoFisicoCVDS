@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/daily-schedule")
+@CrossOrigin(origins = "*")
 public class DailyScheduleController {
 
     @Autowired
