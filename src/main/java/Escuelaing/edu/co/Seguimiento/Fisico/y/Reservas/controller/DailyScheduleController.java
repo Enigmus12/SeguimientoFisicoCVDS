@@ -24,10 +24,10 @@ public class DailyScheduleController {
     @Autowired
     private JwtUtil jwtUtil;
 
-    @PostMapping("/generate/{scheduleId}")
-    public ResponseEntity<?> generateDailySchedules(@PathVariable String scheduleId) {
+    @PostMapping("/generate/{scheduleGroupId}")
+    public ResponseEntity<?> generateDailySchedulesByGroup(@PathVariable String scheduleGroupId) {
         try {
-            List<DailySchedule> generatedSchedules = dailyScheduleService.generateDailySchedulesFromSemestral(scheduleId);
+            List<DailySchedule> generatedSchedules = dailyScheduleService.generateDailySchedulesFromGroup(scheduleGroupId);
 
             List<DailyScheduleDTO> dtoList = generatedSchedules.stream()
                     .map(this::convertToDTO)

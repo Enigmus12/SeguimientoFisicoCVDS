@@ -25,6 +25,21 @@ import java.time.temporal.TemporalAdjusters;
 @Service
 public class DailyScheduleImpl implements DailyScheduleService {
 
+    @Override
+    public List<DailySchedule> generateDailySchedulesFromGroup(String scheduleGroupId) {
+        // Obtener todos los horarios semestrales asociados al grupo
+        List<GymSchedules> semestralSchedules = gymScheduleMongoRepository.findByScheduleGroupId(scheduleGroupId);
+        if (semestralSchedules == null || semestralSchedules.isEmpty()) {
+            throw new IllegalArgumentException("No existen horarios semestrales para el grupo con ID " + scheduleGroupId);
+        }
+        List<DailySchedule> allGenerated = new ArrayList<>();
+        for (GymSchedules semestralSchedule : semestralSchedules) {
+            // Reutilizar la lógica existente para cada horario semestral
+            allGenerated.addAll(generateDailySchedulesFromSemestral(semestralSchedule.getId()));
+        }
+        return allGenerated;
+    }
+
     @Autowired
     private DailyScheduleMongoRepository dailyScheduleRepository;
 
