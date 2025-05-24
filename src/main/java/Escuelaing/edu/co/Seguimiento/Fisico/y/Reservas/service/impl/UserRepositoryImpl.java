@@ -1,3 +1,4 @@
+
 package Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.impl;
 
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.config.UserServiceException;
@@ -35,6 +36,13 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public void deleteById(String userId) throws UserServiceException {
         userMongoRepository.deleteById(userId);
+    }
+
+    @Override
+    public User findByUserName(String userName) throws UserServiceException {
+        User user = userMongoRepository.findByUserName(userName);
+        if (user == null) throw new UserServiceException("User Not found");
+        return user;
     }
 
 }
