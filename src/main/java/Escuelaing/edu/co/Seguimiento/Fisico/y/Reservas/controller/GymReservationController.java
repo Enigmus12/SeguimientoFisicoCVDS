@@ -19,6 +19,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/gym")
+@CrossOrigin(origins = "*")
 public class GymReservationController {
 
     @Autowired

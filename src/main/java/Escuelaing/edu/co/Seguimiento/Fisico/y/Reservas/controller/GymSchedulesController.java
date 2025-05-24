@@ -14,6 +14,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/gym-schedules")
+@CrossOrigin(origins = "*")
 public class GymSchedulesController {
 
     @Autowired
