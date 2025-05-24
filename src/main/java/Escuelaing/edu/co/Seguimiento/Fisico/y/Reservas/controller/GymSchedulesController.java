@@ -2,6 +2,7 @@ package Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.controller;
 
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.dto.GymSchedulesDTO;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.model.GymSchedules;
+import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.Service.DailyScheduleService;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.Service.GymScheduleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -31,13 +32,25 @@ public class GymSchedulesController {
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
+    @Autowired
+    private DailyScheduleService dailyScheduleService;
+
     @PostMapping("/create-semestral")
     public ResponseEntity<?> createSemestralSchedules(@RequestBody GymSchedulesDTO gymSchedulesDTO) {
         try {
             List<GymSchedules> createdSchedules = gymScheduleService.createSemestralSchedules(gymSchedulesDTO);
+            if (createdSchedules == null || createdSchedules.isEmpty()) {
+                return new ResponseEntity<>("No se crearon horarios semestrales", HttpStatus.BAD_REQUEST);
+            }
+            // Tomar el scheduleGroupId del primer horario creado (todos comparten el mismo)
+            String scheduleGroupId = createdSchedules.get(0).getScheduleGroupId();
+            // Generar los horarios diarios automáticamente
+            dailyScheduleService.generateDailySchedulesFromGroup(scheduleGroupId);
             return new ResponseEntity<>(createdSchedules, HttpStatus.CREATED);
         } catch (IllegalArgumentException | IllegalStateException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error al crear horarios y generar diarios: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

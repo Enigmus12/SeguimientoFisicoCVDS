@@ -10,6 +10,7 @@ import java.util.Optional;
 public interface DailyScheduleService {
 
     List<DailySchedule> generateDailySchedulesFromSemestral(String scheduleId);
+    List<DailySchedule> generateDailySchedulesFromGroup(String scheduleGroupId);
     List<DailySchedule> findAll();
     Optional<DailySchedule> findById(String id);
     List<DailySchedule> findByScheduleId(String scheduleId);
