@@ -16,4 +16,7 @@ public interface DailyScheduleService {
     List<DailySchedule> findByScheduleGroupId(String scheduleGroupId);
     List<DailySchedule> addUserToScheduleByGroup(String scheduleId, String userId) throws Exception;
     List<DailySchedule> findIncompleteSchedules();
+    DailySchedule removeUserFromScheduleById(String scheduleId, String userId) throws Exception;
+    List<DailySchedule> removeUserFromScheduleByDate(LocalDate date, String userId) throws Exception;
+    DailySchedule addUserToSchedule(String id, String userId) throws Exception;
 }

@@ -278,6 +278,123 @@ public class DailyScheduleImpl implements DailyScheduleService {
         return schedules;
     }
 
+    @Override
+    public DailySchedule addUserToSchedule(String id, String userId) throws Exception {
+        Optional<DailySchedule> optionalSchedule = dailyScheduleRepository.findById(id);
+
+        if (!optionalSchedule.isPresent()) {
+            throw new Exception("No se encontró el horario con ID " + id);
+        }
+
+        DailySchedule schedule = optionalSchedule.get();
+
+        // Verificar si el usuario ya está en la lista
+        if (schedule.getUsers().contains(userId)) {
+            throw new Exception("El usuario ya está registrado en este horario");
+        }
+
+        // Verificar si hay capacidad disponible
+        if (schedule.getCapacity() <= 0) {
+            throw new Exception("No hay cupos disponibles en este horario");
+        }
+
+        // Verificar si el usuario ya tiene 3 reservas en la misma semana
+        if (hasMaxWeeklyReservations(userId, schedule.getDate())) {
+            throw new Exception("Has alcanzado el límite máximo de 3 reservas por semana");
+        }
+
+        // Añadir usuario a la lista
+        schedule.getUsers().add(userId);
+
+        // Reducir la capacidad
+        schedule.setCapacity(schedule.getCapacity() - 1);
+
+        // Actualizar el estado
+        schedule.updateStatus();
+
+        // Guardar y devolver el horario actualizado
+        return dailyScheduleRepository.save(schedule);
+    }
+
+    private boolean hasMaxWeeklyReservations(String userId, LocalDate date) {
+        // Calcular el primer día (lunes) y último día (domingo) de la semana
+        LocalDate startOfWeek = date.minusDays(date.getDayOfWeek().getValue() - 1);
+        LocalDate endOfWeek = startOfWeek.plusDays(6);
+
+        // Buscar todos los horarios en esa semana donde el usuario esté inscrito
+        List<DailySchedule> userSchedulesInWeek = dailyScheduleRepository.findByDateBetweenAndUsersContaining(
+                startOfWeek, endOfWeek, userId);
+
+        // Si ya tiene 3 o más reservas, devolver true
+        return userSchedulesInWeek.size() >= 3;
+    }
+
+
+    @Override
+    public DailySchedule removeUserFromScheduleById(String id, String userId) throws Exception {
+        Optional<DailySchedule> optionalSchedule = dailyScheduleRepository.findById(id);
+
+        if (!optionalSchedule.isPresent()) {
+            throw new Exception("No se encontró el horario con ID " + id);
+        }
+
+        DailySchedule schedule = optionalSchedule.get();
+
+        // Verificar si el usuario está en la lista
+        if (!schedule.getUsers().contains(userId)) {
+            throw new Exception("El usuario no está registrado en este horario");
+        }
+
+        // Eliminar el usuario de la lista
+        schedule.getUsers().remove(userId);
+
+        // Incrementar la capacidad
+        schedule.setCapacity(schedule.getCapacity() + 1);
+
+        // Actualizar el estado
+        schedule.updateStatus();
+
+        // Guardar y devolver el horario actualizado
+        return dailyScheduleRepository.save(schedule);
+    }
+
+    @Override
+    public List<DailySchedule> removeUserFromScheduleByDate(LocalDate date, String userId) throws Exception {
+        // Buscar todos los horarios en esa fecha (necesitaremos añadir este método al repositorio)
+        List<DailySchedule> schedules = dailyScheduleRepository.findByDate(date);
+
+        if (schedules.isEmpty()) {
+            throw new Exception("No se encontraron horarios para la fecha " + date);
+        }
+
+        List<DailySchedule> updatedSchedules = new ArrayList<>();
+        boolean removedFromAtLeastOne = false;
+
+        for (DailySchedule schedule : schedules) {
+            // Verificar si el usuario está en la lista
+            if (schedule.getUsers().contains(userId)) {
+                // Eliminar el usuario de la lista
+                schedule.getUsers().remove(userId);
+
+                // Incrementar la capacidad
+                schedule.setCapacity(schedule.getCapacity() + 1);
+
+                // Actualizar el estado
+                schedule.updateStatus();
+
+                // Guardar el horario actualizado
+                updatedSchedules.add(dailyScheduleRepository.save(schedule));
+                removedFromAtLeastOne = true;
+            }
+        }
+
+        if (!removedFromAtLeastOne) {
+            throw new Exception("El usuario no está registrado en ningún horario para la fecha " + date);
+        }
+
+        return updatedSchedules;
+    }
+
 
     @Override
     public List<DailySchedule> findIncompleteSchedules() {

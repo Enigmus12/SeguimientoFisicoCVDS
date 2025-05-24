@@ -3,11 +3,14 @@ package Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.controller;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.dto.DailyScheduleDTO;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.model.DailySchedule;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.Service.DailyScheduleService;
+import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,6 +20,9 @@ public class DailyScheduleController {
 
     @Autowired
     private DailyScheduleService dailyScheduleService;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @PostMapping("/generate/{scheduleId}")
     public ResponseEntity<?> generateDailySchedules(@PathVariable String scheduleId) {
@@ -58,7 +64,7 @@ public class DailyScheduleController {
         return new ResponseEntity<>(dtoList, HttpStatus.OK);
     }
 
-    @PutMapping("/{scheduleGroupId}/add-user/{userId}")
+    @PostMapping("/{scheduleGroupId}/add-user/{userId}")
     public ResponseEntity<?> addUserToAllSchedulesByGroup(@PathVariable String scheduleGroupId, @PathVariable String userId) {
         try {
             List<DailySchedule> updatedSchedules = dailyScheduleService.addUserToScheduleByGroup(scheduleGroupId, userId);
@@ -71,6 +77,31 @@ public class DailyScheduleController {
         }
     }
 
+    // Endpoint para añadir usuario por ID específico del horario
+    @PostMapping("/{id}/add-user")
+    public ResponseEntity<?> reserveToSchedule(
+            @PathVariable String id,
+            @RequestHeader("Authorization") String token) {
+        try {
+            // Extraer token
+            String jwtToken = token.replace("Bearer ", "");
+
+            // Extraer userId del token
+            String userId = jwtUtil.extractUserId(jwtToken);
+
+            // Añadir usuario al horario
+            DailySchedule updatedSchedule = dailyScheduleService.addUserToSchedule(id, userId);
+
+            // Convertir a DTO y devolver la respuesta
+            DailyScheduleDTO dto = convertToDTO(updatedSchedule);
+
+            return new ResponseEntity<>(dto, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+
     // Endpoint para obtener horarios incompletos
     @GetMapping("/incomplete")
     public ResponseEntity<List<DailyScheduleDTO>> getIncompleteSchedules() {
@@ -82,6 +113,58 @@ public class DailyScheduleController {
 
         return new ResponseEntity<>(dtoList, HttpStatus.OK);
     }
+
+    @DeleteMapping("/remove-user/{id}")
+    public ResponseEntity<?> removeUserFromScheduleById(
+            @PathVariable String id,
+            @RequestHeader("Authorization") String token) {
+
+        try {
+            // Extraer token
+            String jwtToken = token.replace("Bearer ", "");
+
+            // Extraer userId del token
+            String userId = jwtUtil.extractUserId(jwtToken);
+
+            // Eliminar usuario del horario
+            DailySchedule updatedSchedule = dailyScheduleService.removeUserFromScheduleById(id, userId);
+
+            // Convertir a DTO y devolver la respuesta
+            DailyScheduleDTO dto = convertToDTO(updatedSchedule);
+
+            return new ResponseEntity<>(dto, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    // Nuevo endpoint para eliminar usuario por fecha
+    @DeleteMapping("/remove-user/by-date/{date}")
+    public ResponseEntity<?> removeUserFromScheduleByDate(
+            @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date,
+            @RequestHeader("Authorization") String token) {
+
+        try {
+            // Extraer token
+            String jwtToken = token.replace("Bearer ", "");
+
+            // Extraer userId del token
+            String userId = jwtUtil.extractUserId(jwtToken);
+
+            // Eliminar usuario de los horarios en esa fecha
+            List<DailySchedule> updatedSchedules = dailyScheduleService.removeUserFromScheduleByDate(date, userId);
+
+            // Convertir a DTO y devolver la respuesta
+            List<DailyScheduleDTO> dtoList = updatedSchedules.stream()
+                    .map(this::convertToDTO)
+                    .collect(Collectors.toList());
+
+            return new ResponseEntity<>(dtoList, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
 
 
     private DailyScheduleDTO convertToDTO(DailySchedule schedule) {

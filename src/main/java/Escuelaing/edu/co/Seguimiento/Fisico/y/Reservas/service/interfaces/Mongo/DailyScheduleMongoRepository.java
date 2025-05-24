@@ -13,4 +13,6 @@ public interface DailyScheduleMongoRepository extends MongoRepository<DailySched
     List<DailySchedule> findByScheduleId(String scheduleId);
     List<DailySchedule> findByScheduleGroupId(String scheduleGroupId);
     List<DailySchedule> findByStatus(String status);
+    List<DailySchedule> findByDate(LocalDate date);
+    List<DailySchedule> findByDateBetweenAndUsersContaining(LocalDate startDate, LocalDate endDate, String userId);
 }

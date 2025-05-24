@@ -95,11 +95,11 @@ public class GymReservationController {
                     schedules
             );
 
-            // Invocar el método PUT de DailyScheduleController para agregar al usuario a los horarios diarios
+            // Invocar el método POST de DailyScheduleController para agregar al usuario a los horarios diarios
             String putUrl = "http://localhost:8080/daily-schedule/" + scheduleGroupId + "/add-user/" + userId;
             ResponseEntity<String> putResponse = restTemplate.exchange(
                     putUrl,
-                    HttpMethod.PUT,
+                    HttpMethod.POST,
                     entity,
                     String.class
             );
