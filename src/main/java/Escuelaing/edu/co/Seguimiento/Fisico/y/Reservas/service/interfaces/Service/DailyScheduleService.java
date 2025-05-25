@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface DailyScheduleService {
+    List<DailySchedule> findRescheduledByUserId(String userId);
 
     List<DailySchedule> generateDailySchedulesFromSemestral(String scheduleId);
     List<DailySchedule> generateDailySchedulesFromGroup(String scheduleGroupId);
