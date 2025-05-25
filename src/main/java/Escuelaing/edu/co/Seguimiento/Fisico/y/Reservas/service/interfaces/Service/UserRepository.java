@@ -11,4 +11,5 @@ public interface UserRepository{
     User findById(String userId) throws UserServiceException;
     User findByUserName(String userName) throws UserServiceException;
     void deleteById(String userId) throws UserServiceException;
+    User findByNumberId(Integer numberId);
 }

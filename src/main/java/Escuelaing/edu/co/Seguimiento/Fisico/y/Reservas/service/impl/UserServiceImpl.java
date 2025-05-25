@@ -62,4 +62,9 @@ public class UserServiceImpl implements UserService {
             return new AuthenticationResponseDTO(false, null, null, "Usuario no encontrado");
         }
     }
+
+    @Override
+    public User getUserByNumberId(Integer numberId) throws UserServiceException {
+        return userRepository.findByNumberId(numberId);
+    }
 }
