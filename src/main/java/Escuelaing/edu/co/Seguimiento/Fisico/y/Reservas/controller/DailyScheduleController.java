@@ -166,6 +166,31 @@ public class DailyScheduleController {
         }
     }
 
+    @GetMapping("/holidays/by-group/{scheduleGroupId}")
+    public ResponseEntity<?> getHolidaySchedulesByGroup(@PathVariable String scheduleGroupId) {
+        try {
+            List<DailySchedule> schedules = dailyScheduleService.findByScheduleGroupId(scheduleGroupId);
+            List<DailyScheduleDTO> holidaysOrRescheduled = schedules.stream()
+                .filter(ds -> ds.isHoliday() || ds.isRescheduled())
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+            return new ResponseEntity<>(holidaysOrRescheduled, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @GetMapping("/rescheduled/by-user/{userId}")
+    public ResponseEntity<?> getRescheduledByUser(@PathVariable String userId) {
+        try {
+            List<DailySchedule> rescheduled = dailyScheduleService.findRescheduledByUserId(userId);
+            List<DailyScheduleDTO> dtos = rescheduled.stream().map(this::convertToDTO).collect(Collectors.toList());
+            return new ResponseEntity<>(dtos, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
 
 
     private DailyScheduleDTO convertToDTO(DailySchedule schedule) {
