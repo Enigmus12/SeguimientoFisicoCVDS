@@ -1,6 +1,7 @@
 package Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.controller;
 
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.dto.GymSchedulesDTO;
+import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.model.DailySchedule;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.model.GymSchedules;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.Service.DailyScheduleService;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.Service.GymScheduleService;
@@ -46,8 +47,27 @@ public class GymSchedulesController {
             // Tomar el scheduleGroupId del primer horario creado (todos comparten el mismo)
             String scheduleGroupId = createdSchedules.get(0).getScheduleGroupId();
             // Generar los horarios diarios automáticamente
-            dailyScheduleService.generateDailySchedulesFromGroup(scheduleGroupId);
-            return new ResponseEntity<>(createdSchedules, HttpStatus.CREATED);
+            List<DailySchedule> generatedSchedules = dailyScheduleService.generateDailySchedulesFromGroup(scheduleGroupId);
+
+            // Identificar los horarios reprogramados por festivo
+            List<String> reprogramados = generatedSchedules.stream()
+                .filter(ds -> ds.isRescheduled() && ds.getOriginalDate() != null)
+                .map(ds -> String.format("%s (%s) reprogramado a %s (%s)",
+                        ds.getOriginalDate(), ds.getDayOfWeek(), ds.getDate(), ds.getDayOfWeek()))
+                .toList();
+
+            String mensaje = reprogramados.isEmpty()
+                ? "No hubo horarios reprogramados por festivo."
+                : "Horarios reprogramados por festivo: " + String.join(", ", reprogramados);
+
+            return new ResponseEntity<>(
+                new java.util.HashMap<String, Object>() {{
+                    put("horariosSemestrales", createdSchedules);
+                    put("horariosDiarios", generatedSchedules);
+                    put("mensaje", mensaje);
+                }},
+                HttpStatus.CREATED
+            );
         } catch (IllegalArgumentException | IllegalStateException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
