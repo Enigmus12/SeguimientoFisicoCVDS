@@ -49,11 +49,11 @@ public class GymSchedulesController {
             // Generar los horarios diarios automáticamente
             List<DailySchedule> generatedSchedules = dailyScheduleService.generateDailySchedulesFromGroup(scheduleGroupId);
 
-            // Identificar los horarios reprogramados por festivo
+            // Identificar los horarios reprogramados por festivo (solo mostrar fechas)
             List<String> reprogramados = generatedSchedules.stream()
                 .filter(ds -> ds.isRescheduled() && ds.getOriginalDate() != null)
-                .map(ds -> String.format("%s (%s) reprogramado a %s (%s)",
-                        ds.getOriginalDate(), ds.getDayOfWeek(), ds.getDate(), ds.getDayOfWeek()))
+                .map(ds -> String.format("%s reprogramado a %s",
+                        ds.getOriginalDate(), ds.getDate()))
                 .toList();
 
             String mensaje = reprogramados.isEmpty()
