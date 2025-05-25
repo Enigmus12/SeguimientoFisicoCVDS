@@ -20,13 +20,13 @@ public class DailySchedule {
     private String scheduleId;          // ID del horario semestral original
     private String scheduleGroupId;     // ID del grupo de horarios
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd", locale = "es-CO", timezone = "America/Bogota")
     private LocalDate date;             // Fecha específica del horario diario
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm", locale = "es-CO", timezone = "America/Bogota")
     private LocalTime startTime;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm", locale = "es-CO", timezone = "America/Bogota")
     private LocalTime endTime;          // Hora de fin
 
     private String dayOfWeek;           // Día de la semana
@@ -37,7 +37,7 @@ public class DailySchedule {
     private List<String> users = new ArrayList<>();  // Lista de usuarios (inicializada vacía)
     private String status;              // Estado: "FULL" o "INCOMPLETE"
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd", locale = "es-CO", timezone = "America/Bogota")
     private LocalDate originalDate;     // Fecha original antes de reprogramar (si aplica)
 
     public DailySchedule(String scheduleId, String scheduleGroupId, LocalDate date,

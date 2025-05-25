@@ -15,7 +15,7 @@ import java.time.LocalDate;
 public class Holiday {
     @MongoId
     private String id;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd", locale = "es-CO", timezone = "America/Bogota")
     private LocalDate date;
     private String name;
     private String description;
