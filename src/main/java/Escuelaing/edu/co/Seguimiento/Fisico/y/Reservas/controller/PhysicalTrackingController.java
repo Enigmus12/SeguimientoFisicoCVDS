@@ -51,7 +51,7 @@ public class PhysicalTrackingController {
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             ResponseEntity<UserResponseDTO> userResponse = restTemplate.exchange(
-                    "http://localhost:8080/user-service/users/" + userId, // URL para buscar por userId
+                    "https://seguimientofisicoreservas-c0dhhcgyb0b9atcc.eastus2-01.azurewebsites.net/user-service/users/" + userId, // URL para buscar por userId
                     HttpMethod.GET,
                     entity,
                     UserResponseDTO.class

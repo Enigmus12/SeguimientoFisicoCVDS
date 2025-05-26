@@ -55,7 +55,10 @@ public class HolidayServiceImpl implements HolidayService {
 
     @Override
     public Optional<Holiday> getHolidayByDate(LocalDate date) {
-        return holidayRepository.findByDate(date);
+        // Buscar todos los festivos y comparar solo la parte de fecha (ignorando hora/zona)
+        return holidayRepository.findAll().stream()
+            .filter(h -> h.getDate() != null && h.getDate().isEqual(date))
+            .findFirst();
     }
 
     @Override

@@ -46,7 +46,7 @@ public class GymReservationController {
             HttpEntity<String> entity = new HttpEntity<>(headers);
 
             ResponseEntity<UserResponseDTO> userResponse = restTemplate.exchange(
-                    "http://localhost:8080/user-service/users/" + userId,
+                    "https://seguimientofisicoreservas-c0dhhcgyb0b9atcc.eastus2-01.azurewebsites.net/user-service/users/" + userId,
                     HttpMethod.GET,
                     entity,
                     UserResponseDTO.class
@@ -97,7 +97,7 @@ public class GymReservationController {
             );
 
             // Invocar el método POST de DailyScheduleController para agregar al usuario a los horarios diarios
-            String putUrl = "http://localhost:8080/daily-schedule/" + scheduleGroupId + "/add-user/" + userId;
+            String putUrl = "https://seguimientofisicoreservas-c0dhhcgyb0b9atcc.eastus2-01.azurewebsites.net/daily-schedule/" + scheduleGroupId + "/add-user/" + userId;
             ResponseEntity<String> putResponse = restTemplate.exchange(
                     putUrl,
                     HttpMethod.POST,

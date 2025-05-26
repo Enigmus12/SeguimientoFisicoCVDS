@@ -8,6 +8,7 @@ import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.model.User;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.Service.UserRepository;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.service.interfaces.Service.UserService;
 import Escuelaing.edu.co.Seguimiento.Fisico.y.Reservas.util.JwtUtil;
+
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -44,44 +45,26 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public AuthenticationResponseDTO authenticate(
-    UserAuthenticationDTO authenticationDTO
-  ) {
+  public AuthenticationResponseDTO authenticate(UserAuthenticationDTO authenticationDTO) {
     try {
       // Buscar usuario por nombre de usuario
-      User user = userRepository.findByUserName(
-        authenticationDTO.getUserName()
-      );
+      User user = userRepository.findByUserName(authenticationDTO.getUserName());
 
       // Verificar la contraseña
       if (user.getPassword().equals(authenticationDTO.getPassword())) {
-        // Generar token JWT con el userId y el role
-        String token = jwtUtil.generateToken(
-          user.getUserName(),
-          user.getRole()
-        );
-        return new AuthenticationResponseDTO(
-          true,
-          user,
-          token,
-          "Autenticación exitosa"
-        );
+        // Generar token JWT con el userName y el role
+        String token = jwtUtil.generateToken(user.getUserName(), user.getRole());
+        return new AuthenticationResponseDTO(true, user, token, "Autenticación exitosa");
       } else {
-        return new AuthenticationResponseDTO(
-          false,
-          null,
-          null,
-          "Contraseña incorrecta"
-        );
+        return new AuthenticationResponseDTO(false, null, null, "Contraseña incorrecta");
       }
     } catch (UserServiceException e) {
-      // Usuario no encontrado
-      return new AuthenticationResponseDTO(
-        false,
-        null,
-        null,
-        "Usuario no encontrado"
-      );
+      return new AuthenticationResponseDTO(false, null, null, "Usuario no encontrado");
     }
+  }
+
+  @Override
+  public User getUserByNumberId(Integer numberId) throws UserServiceException {
+    return userRepository.findByNumberId(numberId);
   }
 }

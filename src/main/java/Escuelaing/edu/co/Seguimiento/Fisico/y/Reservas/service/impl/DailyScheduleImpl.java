@@ -26,6 +26,19 @@ import java.time.temporal.TemporalAdjusters;
 public class DailyScheduleImpl implements DailyScheduleService {
 
     @Override
+    public List<DailySchedule> findRescheduledByUserId(String userId) {
+        // Buscar todos los horarios donde el usuario esté inscrito y que hayan sido reprogramados
+        List<DailySchedule> all = dailyScheduleRepository.findAll();
+        List<DailySchedule> result = new ArrayList<>();
+        for (DailySchedule ds : all) {
+            if (ds.isRescheduled() && ds.getUsers() != null && ds.getUsers().contains(userId)) {
+                result.add(ds);
+            }
+        }
+        return result;
+    }
+
+    @Override
     public List<DailySchedule> generateDailySchedulesFromGroup(String scheduleGroupId) {
         // Obtener todos los horarios semestrales asociados al grupo
         List<GymSchedules> semestralSchedules = gymScheduleMongoRepository.findByScheduleGroupId(scheduleGroupId);
