@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @RequestMapping("/routine-service")
@@ -81,6 +83,89 @@ public class RoutineController {
         );
       List<Routine> recommended = routineService.getRecommendations(username);
       return ResponseEntity.ok(recommended);
+    } catch (Exception e) {
+      e.printStackTrace();
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+    }
+  }
+
+  @PostMapping("/rutina/{username}")
+  public ResponseEntity<Routine> createRoutineForUser(
+    @PathVariable String username,
+    @RequestBody String routineId
+  ) {
+    // Quita comillas si existen
+    routineId = routineId.replace("\"", "");
+    Routine routine = routineService.getRoutineById(routineId);
+    if (routine == null) {
+      System.out.println("Routine with ID " + routineId + " not found");
+      return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+    }
+    try {
+      routineService.createRoutineForUser(username, routine);
+      System.out.println(
+        "Routine with ID " + routineId + " created for user " + username
+      );
+      return ResponseEntity.status(HttpStatus.CREATED).body(routine);
+    } catch (Exception e) {
+      e.printStackTrace();
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+    }
+  }
+
+  @GetMapping("/user/{username}/routines")
+  public ResponseEntity<List<Routine>> getUserRoutines(
+    @PathVariable String username
+  ) {
+    try {
+      List<Routine> userRoutines = routineService.getUserRoutines(username);
+      return ResponseEntity.ok(userRoutines);
+    } catch (Exception e) {
+      e.printStackTrace();
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+    }
+  }
+
+  @GetMapping("/user/{username}/routine/{routineId}")
+  public ResponseEntity<Routine> getUserRoutineById(
+    @PathVariable String username,
+    @PathVariable String routineId
+  ) {
+    try {
+      Routine userRoutine = routineService.getUserRoutineById(
+        username,
+        routineId
+      );
+      if (userRoutine != null) {
+        return ResponseEntity.ok(userRoutine);
+      } else {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+    }
+  }
+
+  @PostMapping("/user/{username}/routine/{routineId}/update")
+  //@PreAuthorize("hasRole('Coache')")
+  public ResponseEntity<Routine> updateUserRoutine(
+    @PathVariable String username,
+    @PathVariable String routineId,
+    @RequestBody RoutineDTO routineDTO
+  ) {
+    try {
+      System.out.println(
+        "Updating routine for user: " + username + ", Routine ID: " + routineId
+      );
+      String result = routineService.updateUserRoutine(
+        username,
+        routineId,
+        routineDTO
+      );
+      System.out.println(result);
+      routineService.getUserRoutines(username);
+      return ResponseEntity.ok().build();
     } catch (Exception e) {
       e.printStackTrace();
       return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);

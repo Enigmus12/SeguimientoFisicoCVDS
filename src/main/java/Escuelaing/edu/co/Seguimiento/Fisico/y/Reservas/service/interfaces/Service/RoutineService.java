@@ -11,4 +11,12 @@ public interface RoutineService {
   Routine updateRoutine(String id, RoutineDTO routineDTO);
   boolean deleteRoutine(String id);
   List<Routine> getRecommendations(String username);
+  void createRoutineForUser(String username, Routine routine);
+  List<Routine> getUserRoutines(String username);
+  Routine getUserRoutineById(String username, String routineId);
+  String updateUserRoutine(
+    String username,
+    String routineId,
+    RoutineDTO routineDTO
+  );
 }
