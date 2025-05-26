@@ -30,6 +30,7 @@ public class UserController {
         return userService.getUser(userId);
     }
 
+
     @PostMapping("/register")
     public User user(@RequestBody UserDTO user) {
         return userService.saveUser(user);
@@ -45,11 +46,6 @@ public class UserController {
     @PostMapping("/login")
     public AuthenticationResponseDTO authenticate(@RequestBody UserAuthenticationDTO authenticationDTO) {
         return userService.authenticate(authenticationDTO);
-    }
-
-    @GetMapping("/users/by-number-id/{numberId}")
-    public User getUserByNumberId(@PathVariable Integer numberId) throws UserServiceException {
-        return userService.getUserByNumberId(numberId);
     }
 
 }

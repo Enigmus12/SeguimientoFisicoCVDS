@@ -14,5 +14,4 @@ public interface UserService {
     List<User> getAllUsers();
     void deleteUser(String userId) throws UserServiceException;
     AuthenticationResponseDTO authenticate(UserAuthenticationDTO authenticationDTO);
-    User getUserByNumberId(Integer numberId) throws UserServiceException;
 }
